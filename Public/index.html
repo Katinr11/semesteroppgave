@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <title>ToDo List</title>
+  </head>
+  <body>
+    
+    <div id="listOfListsContainer" style="border: 1px solid blue">
+      
+      <!--test-->
+
+      <nav>
+        <ul id="appNav">
+          <li><button class="active">Ny Liste</button></li>
+          <li><button>ToDo</button></li>
+          <li><button>Logg ut</button></li>
+        </ul>
+      </nav>
+      <h1>Oversikt</h1>
+      <!----Må programmere knappene....-->
+
+      <ul id="lists"></ul>
+    </div>
+
+    <div id="listDetail" style="border: 1px solid red">
+      <h2 id="listName"></h2>
+      <ul id="listItems"></ul>
+      <input id="newListElement" />
+      <button id="newListElementButton" type="submit">OK</button>
+      <button id="deleteListButton">Delete list</button>
+    </div>
+
+    
+    <div id="createNewListForm" style="border: 1px solid green">
+      <h2>Ny Liste</h2>
+      <label for="createNewListName">To do..</label>
+      <input id="createNewListName" type="text" placeholder="Navn på liste" /><br />
+      
+      <button id="createNewListButton" type="submit">OK</button>
+    </div>
+
+    <!----------- USER ---------->
+
+    <div id="signUpForm" class="hidden">
+      <label for="userName">Name</label>
+      <input id="userName" type="text" required /><br />
+      
+      <label for="email">e-mail</label>
+      <input
+        id="email"
+        type="email"
+        placeholder=" example@gmail.com"
+        required
+      /><br />
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        type="password"
+        placeholder=" ******"
+        required
+      /><br />
+
+      <button id="createUser" type="submit">Submit</button>
+      <a href="#" id="showLogIn">Log in</a>
+    </div>
+
+    <div id="signInForm" class="hidden">
+      <label for="signInUserName">e-mail</label>
+      <input
+        id="signInUserName"
+        type="email"
+        placeholder=" example@gmail.com"
+        required
+      /><br />
+
+      <label for="sigInPassword">Password</label>
+      <input
+        id="sigInPassword"
+        type="password"
+        placeholder=" ******"
+        required
+      /><br />
+
+      <button id="signInUser" type="submit">Submit</button>
+      <a href="#" id="showCreateNewUser">New user</a>
+    </div>
+
+    <div id="modifyUserForm" class="hidden">
+      <label for="modifyUserName">Username</label>
+      <input id="modifyUserName" type="text" required /><br />
+
+      <label for="modifyEpost">e-mail</label>
+      <input
+        id="modifyEpost"
+        type="email"
+        placeholder=" example@gmail.com"
+        required
+      /><br />
+
+      <label for="modifyPassword">Password</label>
+      <input
+        id="modifyPassword"
+        type="password"
+        placeholder=" ******"
+        required
+      /><br />
+
+      <button id="modifyUser" type="submit">Submit</button>
+      <button id="deleteUser">Delete account</button>
+    </div>
+
+    <!------------- USER end -------------->
+
+    <script src="js/utils.js" ></script>
+    <script src="js/user.js"> </script>
+    <script src="js/list.js" ></script>
+
+    <script>
+      function startApplication() {
+        //#region  Togle and show create / login user forms -------
+        const showCreateNewUser = document.querySelector("#signInForm > a");
+        const showLogIn = document.querySelector("#signUpForm > a");
+        showCreateNewUser.onclick = showSignupForm;
+        showLogIn.onclick = showLoginForm;
+        //#endregion ----------------------------------------
+
+        //#region for creating users
+
+        //createUser
+        document.getElementById("createUser").onclick = async () => {
+          await createUser();
+        };
+
+        document.getElementById("signInUser").onclick = async () => {
+          await logInUser();
+        };
+        //#endregion
+
+        document.getElementById("createNewListButton").onclick = async () => {
+          await createList();
+        };
+
+        document.getElementById("newListElementButton").onclick = async () => {
+          await addNewListItem();
+        };
+
+        document.getElementById("deleteListButton").onclick = async () => {
+          await removeList();
+        };
+
+        isUserLogedIn = localStorage.getItem("userLogedIn") || false;
+
+        if (!isUserLogedIn) {
+          hideListUI();
+          showLoginForm();
+        } else {
+          showListUI();
+        }
+      }
+
+      async function createList() {
+        const name = getValueOf("createNewListName");
+        await createNewList(name, currentUser.id);
+        refreshListDisplays();
+      }
+
+      async function removeList() {
+        const index = allUsersLists.indexOf(currentList);
+        allUsersLists.splice(index, 1);
+        refreshListDisplays();
+        hideElements(["listDetail"]);
+        await deleteList(currentList);
+      }
+
+      function hideListUI() {
+        hideElements([
+          "createNewListForm",
+          "listOfListsContainer",
+          "listDetail",
+        ]);
+      }
+
+      function refreshListDisplays() {
+        const listDisplay = document.getElementById("lists");
+        listDisplay.innerHTML = "";
+        for (let list of allUsersLists) {
+          let l = document.createElement("li");
+          l.innerText = list.name;
+          listDisplay.appendChild(l);
+          l.onclick = () => {
+            showElements(["listDetail"]);
+            displayList(list);
+          };
+        }
+      }
+
+      function displayList(list) {
+        currentList = list;
+        const ul = document.getElementById("listItems");
+        ul.innerHTML = "";
+        const h2 = document.getElementById("listName");
+        h2.innerText = currentList.name;
+        for (let index = 0; index < currentList.items.length; index++) {
+          const item = currentList.items[index];
+          const li = document.createElement("li");
+
+          const checkbox = document.createElement("input");
+          checkbox.setAttribute("data-index", index);
+          checkbox.setAttribute("type", "checkbox");
+        
+          if (item.isdone) {
+            checkbox.setAttribute("checked", true);
+          }
+
+          checkbox.addEventListener("change", async function (e) {
+            const index = e.target.getAttribute("data-index");
+            console.log("Check for item ", index);
+            currentList.items[index].isdone = event.currentTarget.checked;
+
+            updateList(currentList);
+          });
+
+          // Add a "checked" symbol when clicking on a list item
+          let list = document.querySelector("ul");
+          list.addEventListener(
+            "click",
+            function (ev) {
+              if (ev.target.tagName === "LI") {
+                ev.target.classList.toggle("checked");
+              }
+            },
+            false
+          );
+          const deleteButton = document.createElement("button");
+          deleteButton.textContent = " X ";
+          deleteButton.style.marginLeft = "5px";
+          deleteButton.setAttribute("data-index", index);
+          deleteButton.onclick = async function (e) {
+            const index = e.target.getAttribute("data-index");
+            currentList.items.splice(index, 1);
+            displayList(currentList);
+            await updateList(currentList);
+          };
+
+          const editButton = document.createElement("button");
+          editButton.textContent = " Edit ";
+          editButton.style.marginLeft = "5px";
+          editButton.setAttribute("data-index", index);
+          editButton.onclick = async function (e) {
+            const index = e.target.getAttribute("data-index");
+            const li = e.target.parentNode;
+            onEditListItem(index, li);
+          };
+
+          const itemDescription = document.createElement("span");
+          itemDescription.innerText = item.text;
+          li.appendChild(itemDescription);
+          li.appendChild(checkbox);
+          li.appendChild(deleteButton);
+          li.appendChild(editButton);
+          ul.appendChild(li);
+        }
+      }
+
+      async function onEditListItem(index, liNode) {
+        liNode.innerHTML = "";
+        const inputBox = document.createElement("input");
+        inputBox.value = currentList.items[index].text;
+        liNode.appendChild(inputBox);
+
+        const okButton = document.createElement("button");
+        okButton.textContent = " OK ";
+        okButton.style.marginLeft = "5px";
+        okButton.setAttribute("data-index", index);
+        okButton.onclick = async function (e) {
+          const index = e.target.getAttribute("data-index");
+           console.log("Check for item ", index);
+           currentList.items[index].text = event.currentTarget.parentNode.querySelector("input").value;
+             displayList(currentList);
+             await updateList(currentList);
+        };
+
+        liNode.appendChild(okButton);
+
+        const xButton = document.createElement("button");
+        xButton.textContent = " X ";
+        xButton.style.marginLeft = "5px";
+        xButton.setAttribute("data-index", index);
+        xButton.onclick = async function (e) {
+          displayList(currentList);
+        };
+
+        liNode.appendChild(xButton);
+      }
+
+
+      async function addNewListItem() {
+        const newItem = getValueOf("newListElement");
+        document.getElementById("newListElement").value = "";
+        currentList.items.push({ text: newItem, isdone: false });
+        displayList(currentList);
+        await updateList(currentList);
+      }
+
+      function showListUI() {
+        showElements(["createNewListForm", "listOfListsContainer"]);
+      }
+
+      function showLoginForm() {
+        showElements(["signInForm"]);
+        hideElements(["signUpForm"]);
+      }
+
+      function showSignupForm() {
+        showElements(["signUpForm"]);
+        hideElements(["signInForm"]);
+      }
+
+      startApplication();
+    </script>
+  </body>
+</html>
