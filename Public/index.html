@@ -275,7 +275,8 @@
     okButton.onclick = async function (e) {
       const index = e.target.getAttribute("data-index");
       console.log("Check for item ", index);
-      currentList.items[index].text = event.currentTarget.parentNode.querySelector("input").value;
+      const value = event.currentTarget.parentNode.querySelector("input").value;
+      currentList.items[index].text = value;  
       displayList(currentList);
       await updateList(currentList);
     };
