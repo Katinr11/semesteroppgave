@@ -21,7 +21,7 @@ module.exports = class DB {
     const lists = this.lists.filter(isCorrectList);
 
     return lists;*/
-    let sql = "SELECT * FROM list WHERE userId = $1";
+    let sql = "SELECT * FROM lists WHERE userId = $1";
     let list = null;
     try {
       let result = await this.pool.query(sql, [userId]);
@@ -49,7 +49,7 @@ module.exports = class DB {
 
     return index >= 0 ? this.lsts[index] : null;*/
 
-    let sql = "SELECT * FROM list WHERE id = $1";
+    let sql = "SELECT * FROM lists WHERE id = $1";
     let list = null;
     try {
       let result = await this.pool.query(sql, [listID]);
@@ -84,9 +84,10 @@ module.exports = class DB {
 
     return index >= 0 ? this.lists[index] : null;*/
 
-    let sql = "UPDATE lists SET listID = $1, name = $2, userID = $3, items = $4";
+    let sql = "UPDATE lists SET id = $1, name = $2, userID = $3, items = $4";
     let list = null;
     try {
+      items = JSON.stringify(items);
       let result = await this.pool.query(sql, [listID, name, userID, items]);
       if (result.rows.length > 0) {
         list = result.rows[0]
@@ -97,7 +98,8 @@ module.exports = class DB {
     }
     catch (err) {
       console.error(err);
-      user = null;
+      
+      //user = null;
     }
 
     return list
@@ -114,7 +116,7 @@ module.exports = class DB {
 
     return index ? true : false;*/
 
-    let sql = "DELETE FROM list WHERE id = $1 RETURNING *";
+    let sql = "DELETE FROM lists WHERE id = $1 RETURNING *";
     let values = [listID];
     let sucsses = false;
 
@@ -152,7 +154,8 @@ module.exports = class DB {
     try {
       let result = await this.pool.query(sql, values);
       if (result.rows.length > 0) {
-        lists = result.rows[0]
+        lists = result.rows[0];
+        lists.items = JSON.parse(lists.items);
       }
       else {
         throw "Could not create lists";
