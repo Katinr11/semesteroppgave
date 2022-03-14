@@ -33,7 +33,8 @@ async function createNewList(name,userID) {
     const response = await fetch("/list", request);
     if (response.status <= 202) {
        const list = await response.json()
-       allUsersLists.push(list);
+        allUsersLists.push(list);
+        
     } else {
         // Håndtere feil som er oppstått
     }
@@ -51,6 +52,10 @@ async function refreshListData(userID) {
     const response = await fetch("/list/user/"+ userID, request);
     if (response.status <= 202) {
         allUsersLists = await response.json()
+        allUsersLists = (allUsersLists) ? allUsersLists:[];
+        allUsersLists.forEach(element => {
+            element.items = JSON.parse(element.items);
+        });
         refreshListDisplays()
     } else {
         // Håndtere feil som er oppstått
